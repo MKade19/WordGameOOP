@@ -1,9 +1,9 @@
 ﻿namespace WordGameOOP;
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        Game game = Game.GetInstance();
-        game.LaunchGame();
+        GameEngine gameEnigine = GameEngine.GetInstance();
+        await gameEnigine.LaunchGame();
     }
 }

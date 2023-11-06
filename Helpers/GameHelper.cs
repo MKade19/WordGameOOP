@@ -1,13 +1,21 @@
 namespace WordGameOOP;
 
-static class GameHelper {
+class GameHelper 
+{
+    private IInput _input;
+
+    public GameHelper()
+    {
+        _input = new Input();
+    }
+
     /// <summary>
     /// Returns true if <paramref name="firstPlayerWord"/> and <paramref name="secondPlayerWord"/> both match <paramref name="startWord"/>
     /// <param name="firstPlayerWord">Word that the first player has entered.</param>
     /// <param name="secondPlayerWord">Word that the second player has entered.</param>
     /// <param name="startWord">Main word of the game.</param>
     /// </summary>
-    public static bool CompairingWords(string? startWord, string? firstPlayerWord, string? secondPlayerWord) {
+    public bool CompairingWords(string? startWord, string? firstPlayerWord, string? secondPlayerWord) {
         bool firstPlayerResult = DoesWordMatch(firstPlayerWord, startWord);
         bool secondPlayerResult = DoesWordMatch(secondPlayerWord, startWord);
 
@@ -25,12 +33,12 @@ static class GameHelper {
         return true;
     }
 
-/// <summary>
-/// Returns true if <paramref name="playerWord"/> matches <paramref name="startWord"/>
-/// </summary>
-/// <param name="playerWord">Word that the player has entered.</param>
-/// <param name="startWord">Main word of the game.</param>
-    static bool DoesWordMatch(string? playerWord, string? startWord) {
+    /// <summary>
+    /// Returns true if <paramref name="playerWord"/> matches <paramref name="startWord"/>
+    /// </summary>
+    /// <param name="playerWord">Word that the player has entered.</param>
+    /// <param name="startWord">Main word of the game.</param>
+    private bool DoesWordMatch(string? playerWord, string? startWord) {
         int oldWordLength = playerWord.Length;
 
         for (int i = 0; i < playerWord.Length; i++) {
@@ -46,5 +54,13 @@ static class GameHelper {
         }
 
         return oldWordLength != 0;
+    }
+
+    /// <summary>
+    /// Provies input for round time and converts it to milleseconds
+    /// </summary>
+    /// <returns>Round time in milleseconds</returns>
+    public async Task<int> GetRoundTime() {
+        return await _input.NumberInput("Enter time for round(sec): ") * 1000;
     }
 }

@@ -3,8 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace WordGameOOP;
 
-class InputOutput : IOutputInput {
+class Input : IInput {
     private static System.Timers.Timer _timer;
+
+    private IOutput _output;
+
+    public Input() {
+        _output = new Output();
+    }
 
     /// <summary>
     /// Provides time input of string that meets all filters
@@ -17,7 +23,7 @@ class InputOutput : IOutputInput {
     /// Inputed string if timer has not elapsed or 
     /// empty string if it has.
     /// </returns>
-    public string TimeoutInput(int interval, string caption, int minLength = -1, int maxLength = Int32.MaxValue){
+    public async Task<string> TimeoutInput(int interval, string caption, int minLength = -1, int maxLength = Int32.MaxValue){
         Console.WriteLine($"You have {interval / 1000} sec to input!");
 
         if(_timer is null){
@@ -28,7 +34,7 @@ class InputOutput : IOutputInput {
         _timer.Stop();
         _timer.Start();
 
-        string? word = WordInput(caption, minLength, maxLength);
+        string? word = await WordInput(caption, minLength, maxLength);
         
         if (_timer.Enabled)
             _timer.Stop();
@@ -45,13 +51,20 @@ class InputOutput : IOutputInput {
     /// <param name="minLength">Min length of input</param>
     /// <param name="maxLength">Max length of input</param>
     /// <returns>Inputed string.</returns>
-    public string WordInput(string caption = "Enter word: ", int minLength = -1, int maxLength = Int32.MaxValue) {
+    public async Task<string> WordInput(string caption = "Enter word: ", int minLength = -1, int maxLength = Int32.MaxValue) {
         string? word;
 
         while (true)
             try {
                 Console.Write(caption);
                 word = Console.ReadLine();
+
+                if (IsCommand(word))
+                {
+                    await _output.ResolveCommand(word);
+                    continue;
+                }
+
                 Validation.ValidateWord(word, minLength, maxLength);
                 break;
             } catch (InvalidInputException e) {
@@ -69,13 +82,21 @@ class InputOutput : IOutputInput {
     /// </exception>
     /// <param name="caption">Caption of input</param>
     /// <returns>Inputed number.</returns>
-    public int NumberInput(string caption = "Enter number: ") {
+    public async Task<int> NumberInput(string caption = "Enter number: ") {
         int number;
 
         while (true)
             try {
                 Console.Write(caption);
-                number = Convert.ToInt32(Console.ReadLine());
+                string? buffer = Console.ReadLine();
+
+                if (IsCommand(buffer))
+                {
+                    await _output.ResolveCommand(buffer);
+                    continue;
+                }
+
+                number = Convert.ToInt32(buffer);
                 break;
             } catch (FormatException e) {
                 Console.WriteLine(e.Message);
@@ -84,14 +105,8 @@ class InputOutput : IOutputInput {
         return number;
     }
 
-    /// <summary>
-    /// Shows all standard info about the round.
-    /// </summary>
-    /// <param name="roundNumber">Number of round</param>
-    public void RoundInfo(int roundNumber) {
-        Console.WriteLine($"To start round {roundNumber} press enter...");
-        Console.ReadLine();
-        Console.WriteLine("Round " + roundNumber);
+    private bool IsCommand(string? buffer) {
+        return buffer?[0] == '/';
     }
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
