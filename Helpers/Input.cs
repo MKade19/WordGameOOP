@@ -1,7 +1,8 @@
 using System.Timers;
-using System.Runtime.InteropServices;
+using WordGameOOP.Contracts;
+using WordGameOOP.Exceptions;
 
-namespace WordGameOOP;
+namespace WordGameOOP.Helpers;
 
 class Input : IInput {
     private static System.Timers.Timer _timer;
@@ -54,7 +55,7 @@ class Input : IInput {
     public async Task<string> WordInput(string caption = "Enter word: ", int minLength = -1, int maxLength = Int32.MaxValue) {
         string? word;
 
-        while (true)
+        while (true){
             try {
                 Console.Write(caption);
                 word = Console.ReadLine();
@@ -67,9 +68,17 @@ class Input : IInput {
 
                 Validation.ValidateWord(word, minLength, maxLength);
                 break;
-            } catch (InvalidInputException e) {
+            } 
+            catch (InvalidInputException e) 
+            {
                 Console.WriteLine(e.Message);
             }
+            catch (GamesessionNotCreatedException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+            
 
         return word;
     }
@@ -86,6 +95,7 @@ class Input : IInput {
         int number;
 
         while (true)
+        {
             try {
                 Console.Write(caption);
                 string? buffer = Console.ReadLine();
@@ -98,9 +108,12 @@ class Input : IInput {
 
                 number = Convert.ToInt32(buffer);
                 break;
-            } catch (FormatException e) {
+            } 
+            catch (FormatException e) 
+            {
                 Console.WriteLine(e.Message);
             }
+        }
 
         return number;
     }
@@ -112,8 +125,8 @@ class Input : IInput {
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
         try {
-            throw new TimeoutException("\nTime has run out!");
-        } catch (TimeoutException te) {
+            throw new Exceptions.TimeoutException("\nTime has run out!");
+        } catch (Exceptions.TimeoutException te) {
             Console.WriteLine(te.Message);
             _timer.Stop();
             Console.WriteLine("Press enter to continue...");

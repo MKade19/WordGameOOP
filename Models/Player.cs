@@ -1,10 +1,8 @@
-using System.Reflection.Metadata;
-using System.Runtime.Serialization;
-using System.Text;
+using WordGameOOP.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace WordGameOOP;
+namespace WordGameOOP.Models;
 
 class Player 
 {

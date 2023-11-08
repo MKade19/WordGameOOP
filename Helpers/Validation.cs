@@ -1,4 +1,6 @@
-namespace WordGameOOP;
+using WordGameOOP.Exceptions;
+
+namespace WordGameOOP.Helpers;
 
 class Validation {
     /// <summary>

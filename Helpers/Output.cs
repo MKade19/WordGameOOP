@@ -1,12 +1,16 @@
-namespace WordGameOOP;
+using WordGameOOP.Exceptions;
+using WordGameOOP.Contracts;
+using WordGameOOP.Models;
+
+namespace WordGameOOP.Helpers;
 
 class Output : IOutput 
 {
-    private Game _currentGame;
+    private Game _game;
 
     public Output() 
     {
-        _currentGame = new Game();
+        _game = new Game();
     }
 
     /// <summary>
@@ -41,16 +45,28 @@ class Output : IOutput
 
     public async Task ShowWords() 
     {
-        string[]? words = (await _currentGame.GetGame()).Words;
+        Game game = await _game.Restore();
 
-        ShowArray<string>(words);
+        if (game is null) 
+        {
+            throw new GamesessionNotCreatedException("Game session has hot been created yet!");
+        }
+
+        List<string>? words = game.Words;
+        ShowList<string>(words);
     }
 
     public async Task ShowCurrentScore() 
     {
-        int score = (await _currentGame.GetGame()).Score;
+        Game game = await _game.Restore();
 
-        Console.WriteLine("Current score is " + score);
+        if (game is null) 
+        {
+            throw new GamesessionNotCreatedException("Game session has hot been created yet!");
+        }
+
+        int score = game.FirstPlayer.Score + game.SecondPlayer.Score;
+        Console.WriteLine("Current total score is " + score);
     }
 
     public async Task ShowTotalScore() 
@@ -66,9 +82,9 @@ class Output : IOutput
         Console.WriteLine("Total score is " + totalScore);
     }
 
-    public void ShowArray<T>(T[]? array) 
+    public void ShowList<T>(List<T>? array) 
     {
-        for (int i = 1; i <= array?.Length; i++) 
+        for (int i = 1; i <= array?.Count; i++) 
         {
             Console.WriteLine($"{i}. {array[i - 1]}");
         }

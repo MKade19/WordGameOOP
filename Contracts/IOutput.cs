@@ -1,4 +1,4 @@
-namespace WordGameOOP;
+namespace WordGameOOP.Contracts;
 
 interface IOutput {
     public void RoundInfo(int roundNumber);
