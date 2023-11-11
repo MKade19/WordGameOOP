@@ -1,13 +1,13 @@
+using WordGameOOP.Models;
+
 namespace WordGameOOP.Contracts;
 
 interface IOutput {
     public void RoundInfo(int roundNumber);
 
-    public Task ShowWords();
+    public void ShowWords(Game? game);
 
-    public Task ShowCurrentScore();
+    public void ShowCurrentScore(Game? game);
 
-    public Task ShowTotalScore();
-
-    public Task ResolveCommand(string? command);
+    public void ShowTotalScore(IEnumerable<Player> players);
 }

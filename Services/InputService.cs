@@ -1,16 +1,17 @@
 using System.Timers;
 using WordGameOOP.Contracts;
 using WordGameOOP.Exceptions;
+using WordGameOOP.Helpers;
 
-namespace WordGameOOP.Helpers;
+namespace WordGameOOP.Services;
 
-class Input : IInput {
+class InputService : IInput {
     private static System.Timers.Timer _timer;
 
-    private IOutput _output;
+    private IGameCommandService _commandService;
 
-    public Input() {
-        _output = new Output();
+    public InputService(IGameCommandService commandService) {
+        _commandService = commandService;
     }
 
     /// <summary>
@@ -53,20 +54,20 @@ class Input : IInput {
     /// <param name="maxLength">Max length of input</param>
     /// <returns>Inputed string.</returns>
     public async Task<string> WordInput(string caption = "Enter word: ", int minLength = -1, int maxLength = Int32.MaxValue) {
-        string? word;
+        string word;
 
         while (true){
             try {
                 Console.Write(caption);
-                word = Console.ReadLine();
+                word = Console.ReadLine() ?? "";
 
                 if (IsCommand(word))
                 {
-                    await _output.ResolveCommand(word);
+                    await _commandService.ResolveCommandAsync(word);
                     continue;
                 }
 
-                Validation.ValidateWord(word, minLength, maxLength);
+                ValidationHelper.ValidateWord(word, minLength, maxLength);
                 break;
             } 
             catch (InvalidInputException e) 
@@ -102,7 +103,7 @@ class Input : IInput {
 
                 if (IsCommand(buffer))
                 {
-                    await _output.ResolveCommand(buffer);
+                    await _commandService.ResolveCommandAsync(buffer);
                     continue;
                 }
 
@@ -110,6 +111,10 @@ class Input : IInput {
                 break;
             } 
             catch (FormatException e) 
+            {
+                Console.WriteLine(e.Message);
+            }
+            catch (GamesessionNotCreatedException e)
             {
                 Console.WriteLine(e.Message);
             }

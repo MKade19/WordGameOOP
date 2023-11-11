@@ -1,8 +1,25 @@
 using WordGameOOP.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Linq;
+using WordGameOOP.Contracts;
+using WordGameOOP.Services;
 
 namespace WordGameOOP.Models;
+
+// interface IStorage 
+// {
+//     Task SaveAsync();
+// }
+
+// class FileStorage : IStorage {
+
+// }
+
+// class GameService : IGameService {
+//     Task CreateNewPlayerAsync();
+//     Task<Player> FindPlayerAsync();
+// }
 
 class Player 
 {
@@ -14,6 +31,7 @@ class Player
 
     [JsonIgnore]
     public string Word { set; get; }
+
     public Player (string name) 
     {
         string? word = "";
@@ -22,48 +40,5 @@ class Player
         Name = name;
         Score = score;
         Word = word;
-    }
-
-    public async Task VerifyPlayer() 
-    {
-        try
-        {
-            List<Player> players = await GetPlayers();
-
-            if (players?.Where(p => p.Name == Name).ToList().Count == 0) 
-            {
-                throw new NotFoundException("Player has not registered!");       
-            }
-            
-            Player? playerFromfile = players?
-                .Where(p => p.Name == Name)
-                .ToList()[0];
-
-            Score = playerFromfile.Score;
-        }
-        catch (NotFoundException ne)
-        {
-            await AddPlayer();
-        }
-    }
-
-    private async Task AddPlayer() 
-    {
-        List<Player> newPlayers = new List<Player>(await GetPlayers());
-        newPlayers.Add(this);
-        string? content = JsonSerializer.Serialize<List<Player>>(newPlayers);
-
-        StreamWriter sw = new StreamWriter("resourses/players.json");
-        await sw.WriteAsync(content);
-        sw.Close();
-    }
-
-    public async Task<List<Player>> GetPlayers() 
-    {
-        StreamReader? sr = new StreamReader("resourses/players.json");
-        string content = await sr.ReadToEndAsync();
-        sr.Close();
-
-        return JsonSerializer.Deserialize<List<Player>>(content);
     }
 }

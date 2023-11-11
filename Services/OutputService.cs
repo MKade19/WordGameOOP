@@ -2,17 +2,10 @@ using WordGameOOP.Exceptions;
 using WordGameOOP.Contracts;
 using WordGameOOP.Models;
 
-namespace WordGameOOP.Helpers;
+namespace WordGameOOP.Services;
 
-class Output : IOutput 
+class OutputService : IOutput 
 {
-    private Game _game;
-
-    public Output() 
-    {
-        _game = new Game();
-    }
-
     /// <summary>
     /// Shows all standard info about the round.
     /// </summary>
@@ -24,29 +17,8 @@ class Output : IOutput
         Console.WriteLine("Round " + roundNumber);
     }
 
-    public async Task ResolveCommand(string? command) 
+    public void ShowWords(Game? game)
     {
-        switch (command)
-        {
-            case "/show-words":
-                await ShowWords();
-                break;
-            case "/score":
-                await ShowCurrentScore();
-                break;
-            case "/total-score":
-                await ShowTotalScore();
-                break;
-            default:
-                Console.WriteLine("Invalid command!");
-                break;
-        }
-    }
-
-    public async Task ShowWords() 
-    {
-        Game game = await _game.Restore();
-
         if (game is null) 
         {
             throw new GamesessionNotCreatedException("Game session has hot been created yet!");
@@ -56,10 +28,8 @@ class Output : IOutput
         ShowList<string>(words);
     }
 
-    public async Task ShowCurrentScore() 
+    public void ShowCurrentScore(Game? game) 
     {
-        Game game = await _game.Restore();
-
         if (game is null) 
         {
             throw new GamesessionNotCreatedException("Game session has hot been created yet!");
@@ -69,9 +39,8 @@ class Output : IOutput
         Console.WriteLine("Current total score is " + score);
     }
 
-    public async Task ShowTotalScore() 
+    public void ShowTotalScore(IEnumerable<Player> players)
     {
-        List<Player> players = await new Player("").GetPlayers();
         int totalScore = 0;
 
         foreach(Player player in players) 
