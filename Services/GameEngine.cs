@@ -1,16 +1,13 @@
 using WordGameOOP.Contracts;
 using WordGameOOP.Models;
+using WordGameOOP.Constants;
 
 namespace WordGameOOP.Services;
     
 class GameEngine 
 {
     private static GameEngine? _gameEngineInstance;
-    private Game? _currentGame;
-    private const int MIN_LENGTH_OF_START_WORD = 8;
-    private const int MIN_LENGTH_OF_PLAYER_WORD = 0;
-    private const int MAX_LENGTH_OF_WORD = 30;
-    private const string ENDGAME_CAPTION = "Game has ended!\nDo you want to restart the game?\n Choose the option (restart, exit): ";
+    private Game _currentGame;
 
     //Dependencies
     private IInput _input;
@@ -19,7 +16,8 @@ class GameEngine
     private IEntityCollectionService<Player> _playerService;
     private IGameCommandService _commandService;
 
-    private GameEngine(
+    private GameEngine
+    (
         IInput input, 
         IOutput output, 
         ISingleEntityService<Game> gameService, 
@@ -32,6 +30,7 @@ class GameEngine
         _gameService = gameService;
         _playerService = playerService;
         _commandService = commandService;
+        _currentGame = Game.Empty();
     }
 
     public static GameEngine GetInstance
@@ -56,11 +55,11 @@ class GameEngine
     /// </summary>
     public async Task LaunchGame() 
     {
-        Refresh();
-        string? firstPlayerName = await _input.WordInput("First player: ");
-        string? secondPlayerName = await _input.WordInput("Second player: ");
-        string? startWord = await _input.WordInput("Start word: ", MIN_LENGTH_OF_START_WORD, MAX_LENGTH_OF_WORD);
-        int timeForRound = await GetRoundTime();
+        _gameService.Refresh();
+        string? firstPlayerName = await _input.WordInputAsync(CaptionConstants.FIRST_PLAYER_NAME_INPUT);
+        string? secondPlayerName = await _input.WordInputAsync(CaptionConstants.SECOND_PLAYER_NAME_INPUT);
+        string? startWord = await _input.WordInputAsync(CaptionConstants.START_WORD_INPUT, LimitsConstants.MIN_LENGTH_OF_START_WORD, LimitsConstants.MAX_LENGTH_OF_WORD);
+        int timeForRound = await GetRoundTimeAsync();
 
         _currentGame = new Game(firstPlayerName, secondPlayerName, startWord, timeForRound);
 
@@ -82,13 +81,27 @@ class GameEngine
     {
         _output.RoundInfo(roundNumber);
 
-        _currentGame.FirstPlayer.Word = await _input.TimeoutInput(_currentGame.TimeForRound, "First player's word: ", MIN_LENGTH_OF_PLAYER_WORD, MAX_LENGTH_OF_WORD);
-        await VerifyPlayerWord(_currentGame.FirstPlayer);
+        _currentGame.FirstPlayer.Word = await _input.TimeoutInputAsync
+        (
+            _currentGame.TimeForRound, 
+            CaptionConstants.FIRST_PLAYER_WORD_INPUT, 
+            LimitsConstants.MIN_LENGTH_OF_PLAYER_WORD, 
+            LimitsConstants.MAX_LENGTH_OF_WORD
+        );
 
-        _currentGame.SecondPlayer.Word = await _input.TimeoutInput(_currentGame.TimeForRound, "Second player's word: ", MIN_LENGTH_OF_PLAYER_WORD, MAX_LENGTH_OF_WORD);
-        await VerifyPlayerWord(_currentGame.SecondPlayer);
+        await AddWordIfNotSuggestedAsync(_currentGame.FirstPlayer);
+
+        _currentGame.SecondPlayer.Word = await _input.TimeoutInputAsync
+        (
+            _currentGame.TimeForRound, 
+            CaptionConstants.SECOND_PLAYER_WORD_INPUT, 
+            LimitsConstants.MIN_LENGTH_OF_PLAYER_WORD, 
+            LimitsConstants.MAX_LENGTH_OF_WORD
+        );
+
+        await AddWordIfNotSuggestedAsync(_currentGame.SecondPlayer);
         
-        if (!await CompairingWords(_currentGame.StartWord, _currentGame.FirstPlayer.Word, _currentGame.SecondPlayer.Word))
+        if (!await CompairingWordsAsync(_currentGame.StartWord, _currentGame.FirstPlayer.Word, _currentGame.SecondPlayer.Word))
         {
             await ChangeScoreAsync();
             return;
@@ -102,28 +115,33 @@ class GameEngine
     /// </summary>
     private async Task GameEnded() 
     {
-        string? endPar = await _input.WordInput(ENDGAME_CAPTION);
+        string? endPar = await _input.WordInputAsync(CaptionConstants.ENDGAME_CAPTION);
 
         switch (endPar) 
         {
-            case "restart": 
+            case GameConstants.RESTART_OPTION: 
                 await LaunchGame();
                 break;
-            case "exit":
+            case GameConstants.EXIT_OPTION:
                 return;
             default: 
-                Console.WriteLine("Invalid input!");
+                _output.ShowMessage(MessageConstants.INVALID_INPUT_MESSAGE);
                 await GameEnded();
                 break;
         }
     }
 
-    public async Task VerifyPlayerWord(Player player) 
+    /// <summary>
+    /// Adds the word if it hasn't suggested
+    /// </summary>
+    /// <param name="player">Player whose word needs to be verified</param>
+    /// <returns></returns>
+    public async Task AddWordIfNotSuggestedAsync(Player player) 
     {
         if (WasWordSuggested(player.Word))
         {
-            player.Word = "";
-            Console.WriteLine("This word has suggested!");
+            player.Word = String.Empty;
+            _output.ShowMessage(MessageConstants.WORD_SUGGESTED_MESSAGE);
             return;
         }
 
@@ -136,26 +154,26 @@ class GameEngine
     /// <param name="secondPlayerWord">Word that the second player has entered.</param>
     /// <param name="startWord">Main word of the game.</param>
     /// </summary>
-    public async Task<bool> CompairingWords(string? startWord, string? firstPlayerWord, string? secondPlayerWord) 
+    private async Task<bool> CompairingWordsAsync(string startWord, string firstPlayerWord, string secondPlayerWord) 
     {
         bool firstPlayerResult = DoesWordMatch(firstPlayerWord, startWord);
         bool secondPlayerResult = DoesWordMatch(secondPlayerWord, startWord);
 
         if (firstPlayerResult && !secondPlayerResult) 
         {
-            Console.WriteLine("First player has won!");
-            await SetResultAsync("First");
+            _output.ShowMessage(MessageConstants.FIRST_PLAYER_WON_MESSAGE);
+            await SetResultAsync(GameConstants.FIRST_PLAYER_WON_RESULT);
             return false;
         }
 
         if (!firstPlayerResult && secondPlayerResult) 
         {
-            Console.WriteLine("Second player has won!");
-            await SetResultAsync("Second");
+            _output.ShowMessage(MessageConstants.SECOND_PLAYER_WON_MESSAGE);
+            await SetResultAsync(GameConstants.SECOND_PLAYER_WON_RESULT);
             return false;
         }
 
-        Console.WriteLine("Draw! Enter next words.");
+        _output.ShowMessage(MessageConstants.DRAW_MESSAGE);
         return true;
     }
 
@@ -164,7 +182,7 @@ class GameEngine
     /// </summary>
     /// <param name="playerWord">Word that the player has entered.</param>
     /// <param name="startWord">Main word of the game.</param>
-    private bool DoesWordMatch(string? playerWord, string? startWord) 
+    private bool DoesWordMatch(string playerWord, string startWord) 
     {
         int oldWordLength = playerWord.Length;
 
@@ -189,9 +207,9 @@ class GameEngine
     /// Provies input for round time and converts it to milleseconds
     /// </summary>
     /// <returns>Round time in milleseconds</returns>
-    public async Task<int> GetRoundTime() 
+    public async Task<int> GetRoundTimeAsync() 
     {
-        return await _input.NumberInput("Enter time for round(sec): ") * 1000;
+        return await _input.NumberInputAsync(CaptionConstants.ROUND_TIME_INPUT) * 1000;
     }
 
     /// <summary>
@@ -211,9 +229,9 @@ class GameEngine
     /// <returns></returns>
     private async Task AddWordAsync(string word) 
     {
-        _currentGame?.Words?.Add(word);
+        _currentGame.Words.Add(word);
         Game gameFromFile = await _gameService.RestoreAsync();
-        gameFromFile.Words = _currentGame?.Words;
+        gameFromFile.Words = _currentGame.Words;
         await _gameService.SaveAsync(gameFromFile);
     }
 
@@ -237,7 +255,7 @@ class GameEngine
     {
         Game gameFromFile = await _gameService.RestoreAsync();
 
-        if (gameFromFile.Result == "First")
+        if (gameFromFile.Result == GameConstants.FIRST_PLAYER_WON_RESULT)
         {
             gameFromFile.FirstPlayer.Score++;
             await _playerService.SaveOneAsync(gameFromFile.FirstPlayer);
@@ -248,18 +266,6 @@ class GameEngine
         }
 
         await _gameService.SaveAsync(gameFromFile);
-    }
-
-
-    /// <summary>
-    /// Deletes file with data about current game
-    /// </summary>
-    private void Refresh() 
-    {
-        if (File.Exists("resourses/currentGame.json")) 
-        {
-            File.Delete("resourses/currentGame.json");
-        } 
     }
 }
 

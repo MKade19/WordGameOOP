@@ -1,5 +1,6 @@
 using WordGameOOP.Models;
 using WordGameOOP.Contracts;
+using WordGameOOP.Constants;
 using System.Text.Json;
 
 namespace WordGameOOP.Services;
@@ -7,10 +8,11 @@ namespace WordGameOOP.Services;
 class PlayerCollectionService : IEntityCollectionService<Player>
 {
     private IStorage _storage;
-    private const string PLAYERS_PATH = "resourses/players.json";
+    private IOutput _output;
 
-    public PlayerCollectionService(IStorage storage) 
+    public PlayerCollectionService(IOutput output, IStorage storage) 
     {
+        _output= output;
         _storage = storage;
     }
 
@@ -33,7 +35,7 @@ class PlayerCollectionService : IEntityCollectionService<Player>
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            _output.ShowMessage(e.Message);
         }
     }
 
@@ -48,12 +50,12 @@ class PlayerCollectionService : IEntityCollectionService<Player>
     {
         try 
         {
-            string content = await _storage.RestoreAsync(PLAYERS_PATH);  
+            string content = await _storage.RestoreAsync(FileConstants.PATH_TO_PLAYERS);  
             return JsonSerializer.Deserialize<IEnumerable<Player>>(content) ?? Enumerable.Empty<Player>();
         }
         catch(Exception e)
         {
-            Console.WriteLine(e.Message);
+            _output.ShowMessage(e.Message);
             return Enumerable.Empty<Player>();
         }
     }
@@ -73,11 +75,11 @@ class PlayerCollectionService : IEntityCollectionService<Player>
         try
         {
             string content = JsonSerializer.Serialize(players);
-            await _storage.SaveAsync(PLAYERS_PATH, content);
+            await _storage.SaveAsync(FileConstants.PATH_TO_PLAYERS, content);
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            _output.ShowMessage(e.Message);
         }
     }
 }

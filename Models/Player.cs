@@ -1,25 +1,6 @@
-using WordGameOOP.Exceptions;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Xml.Linq;
-using WordGameOOP.Contracts;
-using WordGameOOP.Services;
 
 namespace WordGameOOP.Models;
-
-// interface IStorage 
-// {
-//     Task SaveAsync();
-// }
-
-// class FileStorage : IStorage {
-
-// }
-
-// class GameService : IGameService {
-//     Task CreateNewPlayerAsync();
-//     Task<Player> FindPlayerAsync();
-// }
 
 class Player 
 {
@@ -32,13 +13,27 @@ class Player
     [JsonIgnore]
     public string Word { set; get; }
 
-    public Player (string name) 
+    [JsonConstructor]
+    public Player(string name) 
     {
-        string? word = "";
-        int score = 0;
-
         Name = name;
-        Score = score;
-        Word = word;
+        Score = 0;
+        Word = String.Empty;
+    }
+
+    private Player()
+    {
+        Name = String.Empty;
+        Score = -1;
+        Word = String.Empty;
+    }
+
+    /// <summary>
+    /// Returns empty player
+    /// </summary>
+    /// <returns></returns>
+    public static Player Empty()
+    {
+        return new Player();
     }
 }

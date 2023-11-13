@@ -1,8 +1,15 @@
 using WordGameOOP.Contracts;
+using WordGameOOP.Constants;
 
 namespace WordGameOOP.Services;
 class FileStorage : IStorage
 {
+    private IOutput _output;
+    public FileStorage(IOutput output)
+    {
+        _output = output;
+    }
+
     /// <summary>
     /// Restores data from file with provided <paramref name="path"/> asynchronously
     /// </summary>
@@ -19,13 +26,13 @@ class FileStorage : IStorage
         }
         catch(FileNotFoundException)
         {
-            Console.WriteLine("File not found!");
-            return "";
+            _output.ShowMessage(MessageConstants.FILE_NOT_FOUND_MESSAGE);
+            return String.Empty;
         }
         catch(Exception e)
         {
-            Console.WriteLine(e.Message);
-            return "";
+            _output.ShowMessage(e.Message);
+            return String.Empty;
         }
         finally
         {
@@ -54,7 +61,7 @@ class FileStorage : IStorage
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            _output.ShowMessage(e.Message);
         }
         finally
         {
@@ -64,5 +71,18 @@ class FileStorage : IStorage
             }
         }
         
+    }
+
+
+    /// <summary>
+    /// Deletes file on given <paramref name="path"/>
+    /// </summary>
+    /// <param name="path">Path of file to delete</param>
+    public void Delete(string path) 
+    {
+        if (File.Exists(path)) 
+        {
+            File.Delete(path);
+        } 
     }
 }

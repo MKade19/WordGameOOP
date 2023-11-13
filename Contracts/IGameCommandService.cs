@@ -2,5 +2,5 @@ namespace WordGameOOP.Contracts;
 
 interface IGameCommandService
 {
-    Task? ResolveCommandAsync(string? command);
+    Task ResolveCommandAsync(string? command);
 }

@@ -2,12 +2,15 @@ using WordGameOOP.Models;
 
 namespace WordGameOOP.Contracts;
 
-interface IOutput {
-    public void RoundInfo(int roundNumber);
+interface IOutput 
+{
+    void RoundInfo(int roundNumber);
 
-    public void ShowWords(Game? game);
+    void ShowWords(Game? game);
 
-    public void ShowCurrentScore(Game? game);
+    void ShowCurrentScore(Game? game);
 
-    public void ShowTotalScore(IEnumerable<Player> players);
+    void ShowTotalScore(IEnumerable<Player> players);
+    
+    void ShowMessage(string message);
 }

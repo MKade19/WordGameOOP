@@ -1,5 +1,6 @@
 using WordGameOOP.Contracts;
 using WordGameOOP.Models;
+using WordGameOOP.Constants;
 
 namespace WordGameOOP.Services;
 class GameCommandService : IGameCommandService
@@ -15,37 +16,37 @@ class GameCommandService : IGameCommandService
         _playerService = playerService;
     }
 
-    public async Task? ResolveCommandAsync(string? command) 
+    public async Task ResolveCommandAsync(string? command) 
     {
         switch (command)
         {
-            case "/show-words":
+            case CommandConstants.WORDS_COMMAND:
                 await ShowWords();
                 break;
-            case "/score":
+            case CommandConstants.CURRENT_SCORE_COMMAND:
                 await ShowCurrentScore();
                 break;
-            case "/total-score":
+            case CommandConstants.TOTAL_SCORE_COMMAND:
                 await ShowTotalScore();
                 break;
             default:
-                Console.WriteLine("Invalid command!");
+                _output.ShowMessage(MessageConstants.INVALID_COMMAND_MESSAGE);
                 break;
         }
     }
 
-    private async Task? ShowWords()
+    private async Task ShowWords()
     {
         _output.ShowWords(await _gameService.RestoreAsync());
     }
 
 
-    private async Task? ShowCurrentScore()
+    private async Task ShowCurrentScore()
     {
         _output.ShowCurrentScore(await _gameService.RestoreAsync());
     }
 
-    private async Task? ShowTotalScore()
+    private async Task ShowTotalScore()
     {
         _output.ShowTotalScore(await _playerService.RestoreCollectionAsync());
     }

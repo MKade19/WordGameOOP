@@ -1,19 +1,18 @@
-﻿using WordGameOOP.Models;
-using WordGameOOP.Services;
+﻿using WordGameOOP.Services;
 
 namespace WordGameOOP;
 internal class Program
 {
     private static async Task Main(string[] args)
     {
-        FileStorage fileStorage = new FileStorage();
         OutputService outputService = new OutputService();
+        FileStorage fileStorage = new FileStorage(outputService);
 
-        PlayerCollectionService playerService = new PlayerCollectionService(fileStorage);
-        GameService gameService = new GameService(fileStorage);
+        PlayerCollectionService playerService = new PlayerCollectionService(outputService, fileStorage);
+        GameService gameService = new GameService(outputService, fileStorage);
 
         GameCommandService commandService = new GameCommandService(outputService, gameService, playerService);
-        InputService inputService = new InputService(commandService);
+        InputService inputService = new InputService(outputService, commandService);
 
         GameEngine gameEngine = GameEngine.GetInstance
         (
